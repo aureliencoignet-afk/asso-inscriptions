@@ -18,7 +18,7 @@ export default function SettingsPage() {
     name: '',
     email: '',
     phone: '',
-    address: '',
+    address_line1: '',
     city: '',
     postal_code: '',
     default_cotisation_amount: 50,
@@ -32,7 +32,7 @@ export default function SettingsPage() {
           name: data.name || '',
           email: data.email || '',
           phone: data.phone || '',
-          address: data.address || '',
+          address_line1: data.address_line1 || '',
           city: data.city || '',
           postal_code: data.postal_code || '',
           default_cotisation_amount: data.default_cotisation_amount || 50,
@@ -136,14 +136,14 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <Label htmlFor="address">Adresse</Label>
+              <Label htmlFor="address_line1">Adresse</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="address"
+                  id="address_line1"
                   className="pl-9"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  value={formData.address_line1}
+                  onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
                 />
               </div>
             </div>

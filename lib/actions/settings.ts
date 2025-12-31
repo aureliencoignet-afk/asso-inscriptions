@@ -26,7 +26,7 @@ export async function updateAssociationSettings(data: {
   name?: string
   email?: string
   phone?: string
-  address?: string
+  address_line1?: string
   city?: string
   postal_code?: string
   default_cotisation_amount?: number

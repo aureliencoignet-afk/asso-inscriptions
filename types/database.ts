@@ -17,6 +17,7 @@ export interface Association {
   email?: string
   phone?: string
   currency?: string
+  default_cotisation_amount?: number
   created_at: string
   updated_at: string
 }
@@ -25,7 +26,8 @@ export interface Profile {
   id: string
   association_id: string
   role: UserRole
-  display_name: string
+  first_name: string
+  last_name: string
   email: string
   is_active: boolean
   created_at: string

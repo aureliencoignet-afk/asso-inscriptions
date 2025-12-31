@@ -19,6 +19,7 @@ CREATE TABLE associations (
     email VARCHAR(255),
     phone VARCHAR(50),
     currency VARCHAR(3) DEFAULT 'EUR',
+    default_cotisation_amount NUMERIC(10,2) DEFAULT 50.00,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -30,7 +31,8 @@ CREATE TABLE profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     association_id UUID NOT NULL REFERENCES associations(id) ON DELETE CASCADE,
     role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'gestionnaire', 'lecture')),
-    display_name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
