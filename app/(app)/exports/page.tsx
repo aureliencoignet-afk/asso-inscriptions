@@ -26,10 +26,11 @@ export default function ExportsPage() {
   const [activities, setActivities] = useState<any[]>([])
   
   const [filters, setFilters] = useState<ExportFilters>({
-    season_id: '',
+    season_id: 'all',
     date_debut: '',
     date_fin: '',
-    payment_mode: '',
+    payment_mode: 'all',
+    activity_id: 'all',
   })
 
   useEffect(() => {
@@ -92,9 +93,9 @@ export default function ExportsPage() {
       let data: any[] = []
       let filename = ''
 
-      // Nettoyer les filtres (supprimer les valeurs vides)
+      // Nettoyer les filtres (supprimer les valeurs vides et "all")
       const cleanFilters = Object.entries(filters).reduce((acc, [key, value]) => {
-        if (value) acc[key as keyof ExportFilters] = value
+        if (value && value !== 'all') acc[key as keyof ExportFilters] = value
         return acc
       }, {} as ExportFilters)
 
@@ -215,7 +216,7 @@ export default function ExportsPage() {
                   <SelectValue placeholder="Toutes les saisons" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les saisons</SelectItem>
+                  <SelectItem value="all">Toutes les saisons</SelectItem>
                   {seasons.map((season) => (
                     <SelectItem key={season.id} value={season.id}>
                       {season.name} ({season.start_date} - {season.end_date})
@@ -262,7 +263,7 @@ export default function ExportsPage() {
                     <SelectValue placeholder="Tous les modes" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous les modes</SelectItem>
+                    <SelectItem value="all">Tous les modes</SelectItem>
                     <SelectItem value="CHEQUE">Chèque</SelectItem>
                     <SelectItem value="VIREMENT">Virement</SelectItem>
                     <SelectItem value="ESPECES">Espèces</SelectItem>
@@ -285,7 +286,7 @@ export default function ExportsPage() {
                     <SelectValue placeholder="Toutes les activités" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les activités</SelectItem>
+                    <SelectItem value="all">Toutes les activités</SelectItem>
                     {activities.map((activity) => (
                       <SelectItem key={activity.id} value={activity.id}>
                         {activity.name}
