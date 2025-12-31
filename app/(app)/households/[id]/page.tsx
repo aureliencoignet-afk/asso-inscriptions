@@ -17,10 +17,11 @@ export default function HouseholdDetailPage({ params }: { params: { id: string }
   const [household, setHousehold] = useState<any>(null)
 
   useEffect(() => {
-    fetch(`/api/households/${params.id}`)
-      .then(res => res.json())
-      .then(data => setHousehold(data))
-      .catch(err => setError('Erreur de chargement'))
+    import('@/lib/actions/households').then(({ getHouseholdById }) => {
+      getHouseholdById(params.id)
+        .then(data => setHousehold(data))
+        .catch(err => setError('Erreur de chargement'))
+    })
   }, [params.id])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

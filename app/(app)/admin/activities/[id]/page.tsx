@@ -19,8 +19,8 @@ export default function ActivityDetailPage({ params }: { params: { id: string } 
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/activities/${params.id}`).then(res => res.json()),
-      fetch('/api/seasons').then(res => res.json())
+      import('@/lib/actions/activities').then(({ getActivityById }) => getActivityById(params.id)),
+      import('@/lib/actions/seasons').then(({ getSeasons }) => getSeasons())
     ])
       .then(([activityData, seasonsData]) => {
         setActivity(activityData)

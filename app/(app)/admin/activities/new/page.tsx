@@ -17,11 +17,11 @@ export default function NewActivityPage() {
   const [seasons, setSeasons] = useState<any[]>([])
 
   useEffect(() => {
-    // Charger la liste des saisons
-    fetch('/api/seasons')
-      .then(res => res.json())
-      .then(data => setSeasons(data))
-      .catch(err => console.error(err))
+    import('@/lib/actions/seasons').then(({ getSeasons }) => {
+      getSeasons()
+        .then(data => setSeasons(data))
+        .catch(err => console.error(err))
+    })
   }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

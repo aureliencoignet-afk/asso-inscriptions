@@ -23,6 +23,25 @@ export async function getSeasons() {
   return data as Season[]
 }
 
+export async function getSeasonById(id: string) {
+  const supabase = await createClient()
+  const profile = await getProfile()
+  
+  if (!profile) {
+    throw new Error('Non authentifié')
+  }
+
+  const { data, error } = await supabase
+    .from('seasons')
+    .select('*')
+    .eq('id', id)
+    .eq('association_id', profile.association_id)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 export async function getActiveSeason(): Promise<Season | null> {
   const supabase = await createClient()
   const profile = await getProfile()

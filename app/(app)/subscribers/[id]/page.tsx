@@ -20,8 +20,8 @@ export default function SubscriberDetailPage({ params }: { params: { id: string 
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/subscribers/${params.id}`).then(res => res.json()),
-      fetch('/api/households').then(res => res.json())
+      import('@/lib/actions/subscribers').then(({ getSubscriberById }) => getSubscriberById(params.id)),
+      import('@/lib/actions/households').then(({ getHouseholds }) => getHouseholds())
     ])
       .then(([subscriberData, householdsData]) => {
         setSubscriber(subscriberData)

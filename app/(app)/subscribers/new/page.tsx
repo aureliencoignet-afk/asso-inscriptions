@@ -17,11 +17,11 @@ export default function NewSubscriberPage() {
   const [households, setHouseholds] = useState<any[]>([])
 
   useEffect(() => {
-    // Charger la liste des foyers
-    fetch('/api/households')
-      .then(res => res.json())
-      .then(data => setHouseholds(data))
-      .catch(err => console.error(err))
+    import('@/lib/actions/households').then(({ getHouseholds }) => {
+      getHouseholds()
+        .then(data => setHouseholds(data))
+        .catch(err => console.error(err))
+    })
   }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

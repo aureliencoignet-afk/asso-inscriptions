@@ -17,10 +17,11 @@ export default function SeasonDetailPage({ params }: { params: { id: string } })
   const [season, setSeason] = useState<any>(null)
 
   useEffect(() => {
-    fetch(`/api/seasons/${params.id}`)
-      .then(res => res.json())
-      .then(data => setSeason(data))
-      .catch(err => setError('Erreur de chargement'))
+    import('@/lib/actions/seasons').then(({ getSeasonById }) => {
+      getSeasonById(params.id)
+        .then(data => setSeason(data))
+        .catch(err => setError('Erreur de chargement'))
+    })
   }, [params.id])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
