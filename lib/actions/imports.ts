@@ -222,10 +222,13 @@ export async function importInscriptions(data: ImportRow[]): Promise<ImportResul
         const amount = row[`echeance${j}_montant` as keyof ImportRow] || 
           (totalAmount / row.echeancier_nb)
         
+        // Convertir en nombre et arrondir à 2 décimales
+        const amountNumber = Number(amount)
+        
         installments.push({
           registration_id: registration.id,
           due_date: dueDate || new Date(new Date().setMonth(new Date().getMonth() + j - 1)).toISOString().split('T')[0],
-          amount: Number(amount.toFixed(2)),
+          amount: parseFloat(amountNumber.toFixed(2)),
           status: 'planned'
         })
       }
