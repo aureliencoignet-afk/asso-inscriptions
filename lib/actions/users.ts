@@ -48,42 +48,24 @@ export async function createUser(data: {
   role: 'admin' | 'gestionnaire' | 'lecture'
   password: string
 }) {
-  const supabase = await createClient()
-  const profile = await getProfile()
-  
-  if (!profile || profile.role !== 'admin') {
-    throw new Error('Permission admin requise')
-  }
-
-  // 1. Create auth user
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email: data.email,
-    password: data.password,
-    email_confirm: true,
+  // Cette fonction appelle maintenant l'API route sécurisée
+  // qui utilise le client admin côté serveur
+  const response = await fetch('/api/admin/users', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
   })
 
-  if (authError) throw authError
+  const result = await response.json()
 
-  // 2. Create profile
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert({
-      id: authData.user.id,
-      email: data.email,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      role: data.role,
-      association_id: profile.association_id,
-    })
-
-  if (profileError) {
-    // Rollback: delete auth user if profile creation fails
-    await supabase.auth.admin.deleteUser(authData.user.id)
-    throw profileError
+  if (!response.ok) {
+    throw new Error(result.error || 'Erreur lors de la création de l\'utilisateur')
   }
 
   revalidatePath('/admin/users')
-  return authData.user
+  return result.user
 }
 
 export async function updateUser(id: string, data: {
@@ -116,37 +98,34 @@ export async function updateUser(id: string, data: {
 }
 
 export async function deleteUser(id: string) {
-  const supabase = await createClient()
-  const profile = await getProfile()
-  
-  if (!profile || profile.role !== 'admin') {
-    throw new Error('Permission admin requise')
+  const response = await fetch(`/api/admin/users/${id}`, {
+    method: 'DELETE',
+  })
+
+  const result = await response.json()
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Erreur lors de la suppression')
   }
-
-  // Don't allow user to delete themselves
-  if (id === profile.id) {
-    throw new Error('Vous ne pouvez pas supprimer votre propre compte')
-  }
-
-  // Delete auth user (will cascade delete profile via trigger)
-  const { error } = await supabase.auth.admin.deleteUser(id)
-
-  if (error) throw error
   
   revalidatePath('/admin/users')
 }
 
 export async function resetUserPassword(id: string, newPassword: string) {
-  const supabase = await createClient()
-  const profile = await getProfile()
-  
-  if (!profile || profile.role !== 'admin') {
-    throw new Error('Permission admin requise')
-  }
-
-  const { error } = await supabase.auth.admin.updateUserById(id, {
-    password: newPassword,
+  const response = await fetch(`/api/admin/users/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'reset_password',
+      password: newPassword,
+    }),
   })
 
-  if (error) throw error
+  const result = await response.json()
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Erreur lors de la réinitialisation')
+  }
 }
