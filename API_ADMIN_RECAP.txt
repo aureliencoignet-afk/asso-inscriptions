@@ -1,0 +1,277 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                  RÉCAPITULATIF : app/api/admin                   ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📂 STRUCTURE EXACTE
+═══════════════════
+
+app/
+└── api/
+    └── admin/
+        └── users/
+            ├── route.ts                  (Fichier 1)
+            └── [id]/
+                └── route.ts              (Fichier 2)
+
+TOTAL : 2 FICHIERS dans app/api/admin
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📄 FICHIER 1 : app/api/admin/users/route.ts
+═══════════════════════════════════════════════════
+
+RÔLE : Créer un nouvel utilisateur
+
+MÉTHODE : POST
+
+ENDPOINT : /api/admin/users
+
+FONCTIONNALITÉS :
+  ✅ Vérifie que l'utilisateur actuel est admin
+  ✅ Valide les données (email, password, first_name, last_name, role)
+  ✅ Utilise createAdminClient() avec service_role
+  ✅ Crée l'utilisateur dans auth.users
+  ✅ Crée le profil dans profiles
+  ✅ Rollback automatique si erreur profil
+
+BODY EXEMPLE :
+{
+  "email": "user@example.com",
+  "password": "Password123",
+  "first_name": "Jean",
+  "last_name": "Dupont",
+  "role": "gestionnaire"
+}
+
+RÉPONSE SUCCÈS :
+{
+  "success": true,
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "first_name": "Jean",
+    "last_name": "Dupont",
+    "role": "gestionnaire"
+  }
+}
+
+RÉPONSE ERREUR :
+{
+  "error": "Message d'erreur"
+}
+
+DÉPENDANCES :
+  • lib/supabase/admin.ts → createAdminClient()
+  • lib/actions/auth.ts → getProfile()
+  • Env var: SUPABASE_SERVICE_ROLE_KEY
+
+APPELÉ PAR :
+  • lib/actions/users.ts → createUser()
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📄 FICHIER 2 : app/api/admin/users/[id]/route.ts
+═══════════════════════════════════════════════════════
+
+RÔLE : Supprimer un utilisateur OU réinitialiser son mot de passe
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A) MÉTHODE DELETE - Supprimer un utilisateur
+   ─────────────────────────────────────────
+
+   ENDPOINT : DELETE /api/admin/users/[id]
+
+   FONCTIONNALITÉS :
+     ✅ Vérifie que l'utilisateur actuel est admin
+     ✅ Empêche l'auto-suppression (ne peut pas supprimer son propre compte)
+     ✅ Utilise createAdminClient() avec service_role
+     ✅ Supprime l'utilisateur de auth.users
+     ✅ Le profil est supprimé automatiquement (cascade)
+
+   EXEMPLE :
+     DELETE /api/admin/users/abc-123-def
+
+   RÉPONSE SUCCÈS :
+     { "success": true }
+
+   APPELÉ PAR :
+     • lib/actions/users.ts → deleteUser()
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+B) MÉTHODE PATCH - Réinitialiser le mot de passe
+   ───────────────────────────────────────────────
+
+   ENDPOINT : PATCH /api/admin/users/[id]
+
+   FONCTIONNALITÉS :
+     ✅ Vérifie que l'utilisateur actuel est admin
+     ✅ Valide le mot de passe (min 6 caractères)
+     ✅ Utilise createAdminClient() avec service_role
+     ✅ Met à jour le mot de passe dans auth.users
+
+   BODY EXEMPLE :
+     {
+       "action": "reset_password",
+       "password": "NewPassword123"
+     }
+
+   EXEMPLE :
+     PATCH /api/admin/users/abc-123-def
+     Body: { "action": "reset_password", "password": "NewPass123" }
+
+   RÉPONSE SUCCÈS :
+     { "success": true }
+
+   APPELÉ PAR :
+     • lib/actions/users.ts → resetUserPassword()
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔐 SÉCURITÉ
+═══════════
+
+TOUTES les routes dans app/api/admin/* :
+
+1. VARIABLE D'ENVIRONNEMENT REQUISE :
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+2. CLIENT ADMIN SUPABASE :
+   • Utilise createAdminClient() (lib/supabase/admin.ts)
+   • Accès complet avec service_role
+   • Jamais exposé au client
+
+3. VÉRIFICATION DES PERMISSIONS :
+   • Chaque route vérifie : profile.role === 'admin'
+   • Retourne 403 Forbidden si non admin
+
+4. VALIDATIONS :
+   • Email valide
+   • Mot de passe min 6 caractères
+   • Rôle valide (admin/gestionnaire/lecture)
+   • Pas d'auto-suppression
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 FLUX COMPLET
+═══════════════
+
+CRÉATION D'UTILISATEUR :
+───────────────────────
+
+  Browser Form
+    ↓ submit
+  lib/actions/users.ts → createUser()
+    ↓ fetch POST
+  app/api/admin/users/route.ts
+    ↓ vérifie admin
+  lib/supabase/admin.ts → createAdminClient()
+    ↓ service_role
+  Supabase Auth
+    ↓ crée auth.users
+  Supabase DB
+    ↓ crée profiles
+  Response
+    ✅ success + user data
+
+SUPPRESSION D'UTILISATEUR :
+───────────────────────────
+
+  Browser Button
+    ↓ confirm + click
+  lib/actions/users.ts → deleteUser()
+    ↓ fetch DELETE
+  app/api/admin/users/[id]/route.ts
+    ↓ vérifie admin + pas auto-delete
+  lib/supabase/admin.ts → createAdminClient()
+    ↓ service_role
+  Supabase Auth
+    ↓ supprime auth.users
+  Cascade Delete
+    ↓ supprime profiles
+  Response
+    ✅ success
+
+RÉINITIALISATION MOT DE PASSE :
+────────────────────────────────
+
+  Browser Form
+    ↓ submit
+  lib/actions/users.ts → resetUserPassword()
+    ↓ fetch PATCH
+  app/api/admin/users/[id]/route.ts
+    ↓ vérifie admin + valide password
+  lib/supabase/admin.ts → createAdminClient()
+    ↓ service_role
+  Supabase Auth
+    ↓ update password
+  Response
+    ✅ success
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CHECKLIST
+════════════
+
+Fichiers requis dans app/api/admin :
+
+  [ ] app/api/admin/users/route.ts
+  [ ] app/api/admin/users/[id]/route.ts
+
+Fichiers de support requis :
+
+  [ ] lib/supabase/admin.ts
+  [ ] lib/actions/auth.ts (avec getProfile)
+  [ ] lib/actions/users.ts (avec createUser, deleteUser, resetUserPassword)
+
+Variables d'environnement :
+
+  [ ] NEXT_PUBLIC_SUPABASE_URL
+  [ ] NEXT_PUBLIC_SUPABASE_ANON_KEY
+  [ ] SUPABASE_SERVICE_ROLE_KEY ⚠️ CRITIQUE
+
+Tests à effectuer :
+
+  [ ] Créer un utilisateur depuis /admin/users/new
+  [ ] Modifier le rôle d'un utilisateur
+  [ ] Réinitialiser le mot de passe d'un utilisateur
+  [ ] Supprimer un utilisateur
+  [ ] Essayer de se supprimer soi-même (devrait échouer)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ RAPPELS IMPORTANTS
+═════════════════════
+
+1. N'ajoutez AUCUN autre fichier dans app/api/admin
+   Ces 2 fichiers sont suffisants !
+
+2. La clé SUPABASE_SERVICE_ROLE_KEY doit être :
+   • Stockée dans Vercel Environment Variables
+   • JAMAIS committée dans Git
+   • JAMAIS exposée au client
+
+3. Toutes les autres opérations utilisent des Server Actions
+   (pas d'API routes pour foyers, abonnés, saisons, activités)
+
+4. L'API PDF est dans app/api/registrations/pdf/route.ts
+   (pas dans app/api/admin)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    RÉSUMÉ ULTRA-RAPIDE                           ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║  app/api/admin contient EXACTEMENT 2 fichiers :                 ║
+║                                                                  ║
+║  1. users/route.ts         → POST (créer)                       ║
+║  2. users/[id]/route.ts    → DELETE (supprimer)                 ║
+║                              PATCH (reset password)             ║
+║                                                                  ║
+║  Variable requise : SUPABASE_SERVICE_ROLE_KEY                   ║
+║                                                                  ║
+║  C'est tout ! Rien d'autre ! 🎉                                 ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝

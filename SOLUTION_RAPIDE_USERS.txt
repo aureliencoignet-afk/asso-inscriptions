@@ -1,0 +1,186 @@
+╔══════════════════════════════════════════════════════════════════╗
+║           SOLUTION RAPIDE - Page Utilisateurs                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+🎯 PROBLÈME : La page /admin/users ne s'affiche pas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ SOLUTION EN 3 ÉTAPES
+
+┌──────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 1 : Vérifier la Structure de la Base                      │
+└──────────────────────────────────────────────────────────────────┘
+
+Dans Supabase SQL Editor, exécutez :
+
+SELECT column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name = 'profiles' 
+ORDER BY ordinal_position;
+
+COLONNES ATTENDUES :
+  ✓ id (uuid)
+  ✓ association_id (uuid)
+  ✓ role (text)
+  ✓ first_name (text)      ← DOIT ÊTRE LÀ
+  ✓ last_name (text)       ← DOIT ÊTRE LÀ
+  ✓ email (text)
+  ✓ is_active (boolean)
+  ✓ created_at (timestamp)
+  ✓ updated_at (timestamp)
+
+❌ SI "display_name" EXISTE AU LIEU DE first_name/last_name
+→ Passez à l'Étape 2
+
+✅ SI first_name et last_name EXISTENT
+→ Passez à l'Étape 3
+
+┌──────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 2 : Corriger la Structure (SI NÉCESSAIRE)                 │
+└──────────────────────────────────────────────────────────────────┘
+
+Dans Supabase SQL Editor, exécutez :
+
+-- Supprimer l'ancienne colonne
+ALTER TABLE profiles DROP COLUMN IF EXISTS display_name;
+
+-- Ajouter les nouvelles colonnes
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS first_name VARCHAR(100);
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_name VARCHAR(100);
+
+-- Mettre à jour les valeurs NULL
+UPDATE profiles 
+SET first_name = COALESCE(first_name, 'Admin'),
+    last_name = COALESCE(last_name, 'User')
+WHERE first_name IS NULL OR last_name IS NULL;
+
+-- Rendre obligatoires
+ALTER TABLE profiles ALTER COLUMN first_name SET NOT NULL;
+ALTER TABLE profiles ALTER COLUMN last_name SET NOT NULL;
+
+✅ Exécuté avec succès → Passez à l'Étape 3
+
+┌──────────────────────────────────────────────────────────────────┐
+│ ÉTAPE 3 : Vérifier Votre Profil Admin                           │
+└──────────────────────────────────────────────────────────────────┘
+
+Dans Supabase SQL Editor, exécutez :
+
+SELECT * FROM profiles WHERE email = 'VOTRE-EMAIL@example.com';
+
+RÉSULTAT ATTENDU :
+  ✓ 1 ligne retournée
+  ✓ role = 'admin'
+  ✓ first_name et last_name ne sont pas NULL
+  ✓ association_id n'est pas NULL
+
+❌ SI AUCUNE LIGNE
+→ Votre profil n'existe pas, créez-le :
+
+-- 1. Trouvez votre user ID
+SELECT id, email FROM auth.users WHERE email = 'VOTRE-EMAIL@example.com';
+
+-- 2. Créez le profil (remplacez les valeurs)
+INSERT INTO profiles (id, association_id, role, first_name, last_name, email)
+VALUES (
+  'VOTRE-USER-ID',
+  'VOTRE-ASSOCIATION-ID',
+  'admin',
+  'Votre',
+  'Nom',
+  'VOTRE-EMAIL@example.com'
+);
+
+❌ SI role != 'admin'
+→ Mettez à jour le rôle :
+
+UPDATE profiles 
+SET role = 'admin' 
+WHERE email = 'VOTRE-EMAIL@example.com';
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 APRÈS CES 3 ÉTAPES
+
+1. Rechargez votre application (peut nécessiter un redéploiement)
+2. Allez sur /admin/users
+3. La page devrait maintenant s'afficher !
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 CHECKLIST FINALE
+
+Page users s'affiche maintenant :
+  [ ] Je vois le titre "Utilisateurs"
+  [ ] Je vois 3 cartes de statistiques (Total, Admins, Gestionnaires)
+  [ ] Je vois la liste des utilisateurs (ou "Aucun utilisateur")
+  [ ] Le bouton "+ Nouvel utilisateur" fonctionne
+
+Si ça ne fonctionne TOUJOURS pas :
+  [ ] J'ai vérifié la console browser (F12) pour voir l'erreur exacte
+  [ ] J'ai consulté DEPANNAGE_PAGE_USERS.md pour plus de détails
+  [ ] J'ai exécuté migration_profiles.sql en entier
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆘 SOLUTION ULTIME (SI RIEN NE MARCHE)
+
+Option 1 : Recréer la base (PERTE DE DONNÉES)
+───────────────────────────────────────────
+
+1. Dans Supabase SQL Editor :
+   DROP TABLE IF EXISTS planned_payments CASCADE;
+   DROP TABLE IF EXISTS installments CASCADE;
+   DROP TABLE IF EXISTS registration_lines CASCADE;
+   DROP TABLE IF EXISTS registrations CASCADE;
+   DROP TABLE IF EXISTS activities CASCADE;
+   DROP TABLE IF EXISTS seasons CASCADE;
+   DROP TABLE IF EXISTS subscribers CASCADE;
+   DROP TABLE IF EXISTS households CASCADE;
+   DROP TABLE IF EXISTS profiles CASCADE;
+   DROP TABLE IF EXISTS associations CASCADE;
+
+2. Réexécutez TOUT le fichier supabase_schema.sql
+
+3. Redéployez l'application
+
+Option 2 : Voir l'erreur exacte
+────────────────────────────────
+
+La page affiche maintenant un message d'erreur détaillé en rouge
+avec les instructions SQL précises à exécuter !
+
+Suivez simplement ce qui est affiché à l'écran.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ NOUVEAUTÉS DE CETTE VERSION
+
+Page users améliorée :
+  ✅ Affiche maintenant l'erreur exacte si problème
+  ✅ Donne les instructions SQL pour corriger
+  ✅ Bouton de retour au dashboard
+  ✅ Gestion d'erreurs complète
+
+Fichiers ajoutés :
+  ✅ migration_profiles.sql - Script de migration
+  ✅ DEPANNAGE_PAGE_USERS.md - Guide détaillé
+  ✅ SOLUTION_RAPIDE_USERS.txt - Ce fichier
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    RÉSUMÉ ULTRA-RAPIDE                           ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║  Le problème vient probablement de la structure de la base :    ║
+║                                                                  ║
+║  1. Vérifiez que first_name et last_name existent               ║
+║  2. Exécutez migration_profiles.sql si nécessaire               ║
+║  3. Vérifiez que votre profil est admin                         ║
+║  4. Rechargez la page                                           ║
+║                                                                  ║
+║  Si erreur persistante : consultez DEPANNAGE_PAGE_USERS.md     ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
