@@ -1,0 +1,12 @@
+# ⚡ FORCER UN REBUILD CLEAN SUR VERCEL
+
+Ce fichier force Vercel à faire un rebuild complet.
+
+Modification: 2024-12-31T14:35:00Z
+
+Instructions:
+1. Commiter ce fichier modifié
+2. Pusher sur GitHub
+3. Redéployer sur Vercel SANS cache
+
+Le simple fait que ce fichier ait changé invalide le cache.

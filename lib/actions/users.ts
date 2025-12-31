@@ -48,24 +48,68 @@ export async function createUser(data: {
   role: 'admin' | 'gestionnaire' | 'lecture'
   password: string
 }) {
-  // Cette fonction appelle maintenant l'API route sécurisée
-  // qui utilise le client admin côté serveur
-  const response = await fetch('/api/admin/users', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
+  const profile = await getProfile()
+  
+  if (!profile || profile.role !== 'admin') {
+    throw new Error('Permission admin requise')
+  }
+
+  // Validation
+  if (!data.email || !data.password || !data.first_name || !data.last_name || !data.role) {
+    throw new Error('Tous les champs sont requis')
+  }
+
+  if (data.password.length < 6) {
+    throw new Error('Le mot de passe doit contenir au moins 6 caractères')
+  }
+
+  // Utiliser le client admin directement
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminClient = createAdminClient()
+
+  // 1. Créer l'utilisateur dans auth.users
+  const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+    email: data.email,
+    password: data.password,
+    email_confirm: true,
+    user_metadata: {
+      first_name: data.first_name,
+      last_name: data.last_name,
+    }
   })
 
-  const result = await response.json()
+  if (authError) {
+    console.error('Auth error:', authError)
+    throw new Error(authError.message)
+  }
 
-  if (!response.ok) {
-    throw new Error(result.error || 'Erreur lors de la création de l\'utilisateur')
+  // 2. Créer le profil
+  const { error: profileError } = await adminClient
+    .from('profiles')
+    .insert({
+      id: authData.user.id,
+      email: data.email,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      role: data.role,
+      association_id: profile.association_id,
+    })
+
+  if (profileError) {
+    console.error('Profile error:', profileError)
+    // Rollback: supprimer l'utilisateur auth
+    await adminClient.auth.admin.deleteUser(authData.user.id)
+    throw new Error(profileError.message)
   }
 
   revalidatePath('/admin/users')
-  return result.user
+  return {
+    id: authData.user.id,
+    email: data.email,
+    first_name: data.first_name,
+    last_name: data.last_name,
+    role: data.role,
+  }
 }
 
 export async function updateUser(id: string, data: {
@@ -98,34 +142,53 @@ export async function updateUser(id: string, data: {
 }
 
 export async function deleteUser(id: string) {
-  const response = await fetch(`/api/admin/users/${id}`, {
-    method: 'DELETE',
-  })
+  const profile = await getProfile()
+  
+  if (!profile || profile.role !== 'admin') {
+    throw new Error('Permission admin requise')
+  }
 
-  const result = await response.json()
+  // Don't allow user to delete themselves
+  if (id === profile.id) {
+    throw new Error('Vous ne pouvez pas supprimer votre propre compte')
+  }
 
-  if (!response.ok) {
-    throw new Error(result.error || 'Erreur lors de la suppression')
+  // Utiliser le client admin directement
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient.auth.admin.deleteUser(id)
+
+  if (error) {
+    console.error('Delete error:', error)
+    throw new Error(error.message)
   }
   
   revalidatePath('/admin/users')
 }
 
 export async function resetUserPassword(id: string, newPassword: string) {
-  const response = await fetch(`/api/admin/users/${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      action: 'reset_password',
-      password: newPassword,
-    }),
+  const profile = await getProfile()
+  
+  if (!profile || profile.role !== 'admin') {
+    throw new Error('Permission admin requise')
+  }
+
+  if (!newPassword || newPassword.length < 6) {
+    throw new Error('Le mot de passe doit contenir au moins 6 caractères')
+  }
+
+  // Utiliser le client admin directement
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const adminClient = createAdminClient()
+
+  const { error } = await adminClient.auth.admin.updateUserById(id, {
+    password: newPassword,
   })
 
-  const result = await response.json()
-
-  if (!response.ok) {
-    throw new Error(result.error || 'Erreur lors de la réinitialisation')
+  if (error) {
+    console.error('Password reset error:', error)
+    throw new Error(error.message)
   }
 }
+
