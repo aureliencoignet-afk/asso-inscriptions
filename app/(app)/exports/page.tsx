@@ -12,10 +12,10 @@ import {
   exportRetards, 
   exportInscriptions,
   exportTresorerie,
-  convertToCSV,
   type ExportType,
   type ExportFilters
 } from '@/lib/actions/exports'
+import { downloadCSV } from '@/lib/utils/csv'
 import { getSeasons } from '@/lib/actions/seasons'
 import { getActivities } from '@/lib/actions/activities'
 
@@ -126,19 +126,8 @@ export default function ExportsPage() {
         return
       }
 
-      // Convertir en CSV
-      const csv = convertToCSV(data, filename)
-      
-      // Créer le fichier et déclencher le téléchargement
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
+      // Télécharger le CSV
+      downloadCSV(data, filename)
 
     } catch (error: any) {
       console.error('Export error:', error)

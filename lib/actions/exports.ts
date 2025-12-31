@@ -320,24 +320,3 @@ export async function exportTresorerie(filters: ExportFilters = {}) {
     saison: pp.installment.registration.season?.name || ''
   }))
 }
-
-// Convertir en CSV
-export function convertToCSV(data: any[], filename: string): string {
-  if (data.length === 0) return ''
-
-  const headers = Object.keys(data[0])
-  const rows = data.map(row => 
-    headers.map(header => {
-      const value = row[header]
-      // Échapper les guillemets et entourer de guillemets si nécessaire
-      if (value === null || value === undefined) return ''
-      const stringValue = String(value)
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`
-      }
-      return stringValue
-    }).join(',')
-  )
-
-  return [headers.join(','), ...rows].join('\n')
-}
