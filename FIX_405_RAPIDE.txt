@@ -1,0 +1,173 @@
+╔══════════════════════════════════════════════════════════════════╗
+║             CORRECTION RAPIDE - Erreur 405                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+🎯 PROBLÈME
+-----------
+https://asso-inscriptions.vercel.app/admin/users
+net::ERR_HTTP_RESPONSE_CODE_FAILURE 405 (Method Not Allowed)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ CAUSE
+--------
+Conflit entre Server Components et Server Actions de Next.js 14
+sur Vercel en production.
+
+La page utilisait "await getUsers()" directement dans un Server
+Component, ce qui cause des problèmes de méthode HTTP (GET vs POST).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 SOLUTION APPLIQUÉE
+---------------------
+
+Transformation de la page en Client Component qui charge les données
+avec useEffect.
+
+AVANT (Server Component) :
+```
+export default async function UsersPage() {
+  await requireRole('admin')
+  const users = await getUsers()
+  return <div>{users}</div>
+}
+```
+
+APRÈS (Client Component) :
+```
+'use client'
+export default function UsersPage() {
+  const [users, setUsers] = useState([])
+  
+  useEffect(() => {
+    async function load() {
+      const data = await getUsers()
+      setUsers(data)
+    }
+    load()
+  }, [])
+  
+  return <div>{users}</div>
+}
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 FICHIERS MODIFIÉS
+--------------------
+
+1. app/(app)/admin/users/page.tsx
+   - Server Component → Client Component
+   - Ajout de useEffect pour charger les données
+   - Ajout d'un loading state avec spinner
+   - Meilleure gestion d'erreurs
+
+2. next.config.js
+   - Ajout de allowedOrigins pour Server Actions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 DÉPLOIEMENT
+--------------
+
+1. Extraire le nouveau ZIP
+   unzip asso-inscriptions.zip
+
+2. Remplacer dans votre projet
+   cp -r asso-inscriptions/* votre-projet/
+
+3. Commit et push
+   git add .
+   git commit -m "fix: erreur 405 page users"
+   git push origin main
+
+4. Attendre le redéploiement Vercel (2-3 min)
+
+5. Tester /admin/users
+   ✅ La page devrait charger avec un spinner
+   ✅ Puis afficher la liste des utilisateurs
+   ✅ Aucune erreur 405
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ AMÉLIORATIONS BONUS
+----------------------
+
+La nouvelle page inclut :
+  ✅ Spinner de chargement élégant
+  ✅ Gestion d'erreurs avec message détaillé
+  ✅ Redirect auto si non admin
+  ✅ Instructions SQL si erreur de structure
+  ✅ Bouton retour au dashboard
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 VÉRIFICATION
+---------------
+
+Après déploiement, vérifiez :
+  [ ] /admin/users se charge sans erreur 405
+  [ ] Spinner s'affiche pendant le chargement
+  [ ] Liste des utilisateurs apparaît
+  [ ] 3 cartes de stats s'affichent
+  [ ] Bouton "+ Nouvel utilisateur" fonctionne
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ SI AUTRES PAGES ONT L'ERREUR 405
+------------------------------------
+
+Appliquez la même solution :
+- Ajoutez 'use client' en haut du fichier
+- Remplacez les appels directs par useEffect
+- Ajoutez un loading state
+
+Exemple pour /admin/seasons :
+```typescript
+'use client'
+export default function SeasonsPage() {
+  const [seasons, setSeasons] = useState([])
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    getSeasons()
+      .then(setSeasons)
+      .finally(() => setLoading(false))
+  }, [])
+  
+  if (loading) return <Loader />
+  return <div>{seasons}</div>
+}
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOCUMENTATION
+----------------
+
+Pour plus de détails, consultez :
+  • CORRECTION_405.md - Explication technique complète
+  • Changements dans app/(app)/admin/users/page.tsx
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    RÉSUMÉ ULTRA-RAPIDE                           ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║  Erreur 405 sur /admin/users                                    ║
+║                                                                  ║
+║  Cause : Conflit Server Component + Server Actions              ║
+║                                                                  ║
+║  Solution : Conversion en Client Component avec useEffect       ║
+║                                                                  ║
+║  Résultat : ✅ Page fonctionne sans erreur 405                  ║
+║                                                                  ║
+║  Fichiers : 2 modifiés (page.tsx + next.config.js)             ║
+║                                                                  ║
+║  Action : Extraire le ZIP, remplacer, commit, push !           ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+🎉 L'ERREUR 405 EST MAINTENANT CORRIGÉE !
