@@ -1,0 +1,85 @@
+=============================================================
+LISTE COMPLÈTE DES FICHIERS - Application Inscriptions
+=============================================================
+
+📚 DOCUMENTATION (6 fichiers)
+├── START_HERE.md                    ⭐ Commencez ici !
+├── DEPLOIEMENT.md                   Instructions de déploiement
+├── QUICKSTART.md                    Guide pas à pas (30 min)
+├── README.md                        Documentation technique
+├── INDEX.md                         Index de tous les fichiers
+└── IMPORT_FORMAT.md                 Format Excel pour l'import
+
+🗄️ BASE DE DONNÉES (1 fichier)
+└── supabase_schema.sql              ⚠️ À exécuter en premier !
+
+⚙️ CONFIGURATION (8 fichiers)
+├── package.json                     Dépendances npm
+├── tsconfig.json                    Configuration TypeScript
+├── next.config.js                   Configuration Next.js
+├── tailwind.config.js               Configuration Tailwind
+├── postcss.config.js                Configuration PostCSS
+├── middleware.ts                    Middleware auth
+├── .env.example                     Template variables env
+└── .gitignore                       Fichiers à ignorer
+
+📱 APPLICATION (app/) - 9 pages
+├── layout.tsx                       Layout racine
+├── globals.css                      Styles globaux
+├── login/
+│   └── page.tsx                     Page de connexion
+└── (app)/
+    ├── layout.tsx                   Layout avec sidebar
+    ├── page.tsx                     Dashboard ⭐
+    ├── households/
+    │   ├── page.tsx                 Liste foyers
+    │   └── new/page.tsx             Création foyer
+    ├── subscribers/
+    │   └── page.tsx                 Liste abonnés
+    ├── registrations/
+    │   └── page.tsx                 Inscriptions (placeholder)
+    ├── import/
+    │   └── page.tsx                 Import (placeholder)
+    ├── exports/
+    │   └── page.tsx                 Exports (placeholder)
+    └── admin/
+        ├── page.tsx                 Admin home
+        └── seasons/
+            └── page.tsx             Gestion saisons
+
+🧩 COMPOSANTS (components/) - 5 fichiers
+├── sidebar.tsx                      Navigation latérale
+└── ui/
+    ├── button.tsx                   Boutons
+    ├── card.tsx                     Cartes
+    ├── input.tsx                    Champs de saisie
+    └── label.tsx                    Labels
+
+📦 BIBLIOTHÈQUES (lib/) - 8 fichiers
+├── actions/
+│   ├── auth.ts                      Authentification ⚠️ Important
+│   ├── dashboard.ts                 Stats dashboard
+│   ├── households.ts                CRUD foyers
+│   ├── subscribers.ts               CRUD abonnés
+│   └── seasons.ts                   CRUD saisons
+├── supabase/
+│   ├── client.ts                    Client browser
+│   └── server.ts                    Client serveur
+└── utils.ts                         Utilitaires
+
+🔤 TYPES (types/) - 1 fichier
+└── database.ts                      Types TypeScript
+
+=============================================================
+TOTAL : 38 fichiers
+=============================================================
+
+⚠️ FICHIERS ESSENTIELS À CONSULTER EN PREMIER :
+1. START_HERE.md                     ← Commencez ici !
+2. supabase_schema.sql               ← À exécuter dans Supabase
+3. .env.example                      ← À copier en .env.local
+4. QUICKSTART.md                     ← Guide complet
+
+🚀 PRÊT À DÉPLOYER !
+
+Pour plus de détails sur chaque fichier, consultez INDEX.md
